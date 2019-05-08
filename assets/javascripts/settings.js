@@ -116,6 +116,8 @@ $(function(){
         ).append(
           inputField('api_key', nextRedmine)
         ).append(
+          inputField('source_project', nextRedmine)
+        ).append(
           inputField('source_tracker', nextRedmine)
         ).append(
           selectField('target_project', projects, nextRedmine, true)

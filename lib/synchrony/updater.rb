@@ -29,10 +29,20 @@ module Synchrony
       created_issues = 0
       updated_issues = 0
 
-      issues = RemoteIssue.all(params: { tracker_id: source_tracker.id,
-                                         limit: LIMIT,
-                                         status_id: '*',
-                                         updated_on: ">=#{sync_date.strftime('%Y-%m-%d')}" })
+	  if (!source_project.nil?)
+		issues = RemoteIssue.all(params: { project_id: source_project.id,
+										   tracker_id: source_tracker.id,
+                                           limit: LIMIT,
+                                           status_id: '*',
+                                           updated_on: ">=#{sync_date.strftime('%Y-%m-%d')}" })
+	  else
+		issues = RemoteIssue.all(params: { 
+										   tracker_id: source_tracker.id,
+                                           limit: LIMIT,
+                                           status_id: '*',
+                                           updated_on: ">=#{sync_date.strftime('%Y-%m-%d')}" })	  
+	  end
+	  
       issues.each do |remote_issue|
         issue = Issue.where(synchrony_id: remote_issue.id, project_id: target_project).first
         if issue.present?
@@ -54,11 +64,14 @@ module Synchrony
     private
 
     def prepare_remote_resources
-      [RemoteTracker, RemoteIssue, RemoteIssueStatus, RemoteUser, RemoteIssuePriority].each do |resource_class|
+      [RemoteProject, RemoteTracker, RemoteIssue, RemoteIssueStatus, RemoteUser, RemoteIssuePriority].each do |resource_class|
         resource_class.site = source_site
         resource_class.headers['X-Redmine-API-Key'] = api_key
       end
       begin
+        #unless source_project.present?
+        #  raise Errors::InvalidSourceTrackerError.new(settings['source_project'], source_site)
+        #end	  
         unless source_tracker.present?
           raise Errors::InvalidSourceTrackerError.new(settings['source_tracker'], source_site)
         end
@@ -87,6 +100,18 @@ module Synchrony
       @api_key ||= settings['api_key']
     end
 
+    def source_project
+      @source_project = nil
+      if (settings['source_project'].present?)
+        if (settings['source_project'] != '*')
+           @source_project ||= RemoteProject.all.
+           find{ |t| t.name.mb_chars.downcase == settings['source_project'].mb_chars.downcase }
+        end
+      else
+        raise Errors::InvalidSettingError.new('source_project')
+      end
+    end
+	
     def source_tracker
       raise Errors::InvalidSettingError.new('source_tracker') unless settings['source_tracker'].present?
       @source_tracker ||= RemoteTracker.all.

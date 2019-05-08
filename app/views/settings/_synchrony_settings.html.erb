@@ -4,7 +4,7 @@
 <% end %>
 <%
    translations = {}.tap do |t|
-     %w(source_site api_key source_tracker target_project target_tracker language).
+     %w(source_site api_key source_project source_tracker target_project target_tracker language).
              each{ |k| t[k] = t("synchrony.settings.#{k}") }
      t['button_delete'] = t('button_delete')
      t['errors.blank'] = t('activerecord.errors.messages.blank')
@@ -20,7 +20,7 @@
     <% settings['redmine'].each_with_index do |redmine, index| %>
       <fieldset class="box synchrony-site-settings">
         <a href="#" class="icon icon-del contextual delete-synchrony-site"><%= t('button_delete') %></a>
-        <% %w(source_site api_key source_tracker).each do |prop| %>
+        <% %w(source_site api_key source_project source_tracker).each do |prop| %>
           <p>
             <label for="settings_redmine_<%= index %>_<%= prop %>">
               <%= t("synchrony.settings.#{prop}") %>
